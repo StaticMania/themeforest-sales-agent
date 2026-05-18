@@ -12,6 +12,12 @@ permissions:
 jobs:
   track-sales:
     runs-on: ubuntu-latest
+    # If you use Environment secrets (Settings → Environments), uncomment and set the name:
+    # environment: production
+    env:
+      ENVATO_API_TOKEN: ${{ secrets.ENVATO_API_TOKEN || vars.ENVATO_API_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || vars.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || vars.TELEGRAM_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -19,11 +25,23 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Verify credentials
+        run: |
+          missing=""
+          [ -z "$ENVATO_API_TOKEN" ] && missing="$missing ENVATO_API_TOKEN"
+          [ -z "$TELEGRAM_BOT_TOKEN" ] && missing="$missing TELEGRAM_BOT_TOKEN"
+          [ -z "$TELEGRAM_CHAT_ID" ] && missing="$missing TELEGRAM_CHAT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing:$missing"
+            echo "Add them as repository Secrets (recommended) or Variables:"
+            echo "  Repo → Settings → Secrets and variables → Actions"
+            echo "Names must match exactly: ENVATO_API_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID"
+            echo "If stored under an Environment, add 'environment: your-env-name' to this job."
+            exit 1
+          fi
+          echo "All credentials present."
+
       - name: Track sales
-        env:
-          ENVATO_API_TOKEN: ${{ secrets.ENVATO_API_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: npm start
 
       - name: Commit updated data.json
