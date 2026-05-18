@@ -1,0 +1,16 @@
+{
+  "name": "themeforest-sales-automation-agent",
+  "version": "1.0.0",
+  "description": "Daily ThemeForest sales tracker with Telegram notifications",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --env-file=.env index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  }
+}

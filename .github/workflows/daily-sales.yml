@@ -1,0 +1,39 @@
+name: Daily ThemeForest Sales
+
+on:
+  schedule:
+    # 8:00 PM GMT+6 (UTC+6) = 14:00 UTC — GitHub Actions cron uses UTC
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  track-sales:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Track sales
+        env:
+          ENVATO_API_TOKEN: ${{ secrets.ENVATO_API_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: npm start
+
+      - name: Commit updated data.json
+        run: |
+          if git diff --quiet data.json; then
+            echo "No changes to data.json"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data.json
+            git commit -m "chore: update sales data"
+            git push
+          fi
