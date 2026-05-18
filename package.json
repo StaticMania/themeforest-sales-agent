@@ -4,7 +4,7 @@
   "description": "Daily ThemeForest sales tracker with Telegram notifications",
   "main": "index.js",
   "scripts": {
-    "start": "node --env-file=.env index.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
