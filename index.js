@@ -164,34 +164,95 @@ async function trackSales() {
 
         saveSalesMemory(memory);
 
-        const message = buildTelegramMessage(results);
-        await sendTelegramMessage(message);
-        console.log(`Sent Telegram report for ${results.length} product(s).`);
+        const report = buildReport(results);
+        const outcomes = await Promise.allSettled([
+            sendTelegramMessage(buildTelegramMessage(report)),
+            sendSlackMessage(buildSlackPayload(report)),
+        ]);
+
+        logNotificationOutcome('Telegram', outcomes[0]);
+        logNotificationOutcome('Slack', outcomes[1]);
     } catch (error) {
         console.error('Agent encountered an error:', error.message);
         process.exitCode = 1;
     }
 }
 
-function buildTelegramMessage(results) {
+function formatProductStatus(newSales, currentSales) {
+    if (newSales > 0) {
+        return `+${formatNumber(newSales)} new · ${formatNumber(currentSales)} total`;
+    }
+    return `No new sales · ${formatNumber(currentSales)} total`;
+}
+
+function buildReport(results) {
+    return { results };
+}
+
+function buildTelegramMessage(report) {
     const lines = ['📈 **Daily ThemeForest Report**', ''];
 
-    for (const { product, newSales, currentSales } of results) {
+    for (const { product, newSales, currentSales } of report.results) {
         lines.push(`**${product.name}**`);
-        if (newSales > 0) {
-            lines.push(`+${formatNumber(newSales)} new · ${formatNumber(currentSales)} total`);
-        } else {
-            lines.push(`No new sales · ${formatNumber(currentSales)} total`);
-        }
+        lines.push(formatProductStatus(newSales, currentSales));
         lines.push('');
     }
 
     return lines.join('\n').trim();
 }
 
+function buildSlackPayload(report) {
+    const blocks = [
+        {
+            type: 'header',
+            text: { type: 'plain_text', text: 'Daily ThemeForest Report', emoji: true },
+        },
+    ];
+
+    const fallbackLines = ['Daily ThemeForest Report'];
+
+    for (let i = 0; i < report.results.length; i++) {
+        const { product, newSales, currentSales } = report.results[i];
+        const status = formatProductStatus(newSales, currentSales);
+
+        blocks.push({
+            type: 'section',
+            text: {
+                type: 'mrkdwn',
+                text: `*${product.name}*\n${status}`,
+            },
+        });
+
+        fallbackLines.push(`${product.name}: ${status}`);
+
+        if (i < report.results.length - 1) {
+            blocks.push({ type: 'divider' });
+        }
+    }
+
+    return {
+        text: fallbackLines.join('\n'),
+        blocks,
+    };
+}
+
+function logNotificationOutcome(channel, outcome) {
+    if (outcome.status === 'fulfilled') {
+        if (outcome.value === 'skipped') {
+            console.log(`${channel}: skipped (not configured).`);
+        } else {
+            console.log(`${channel}: report sent.`);
+        }
+        return;
+    }
+
+    console.error(`${channel}: failed — ${outcome.reason?.message ?? outcome.reason}`);
+    process.exitCode = 1;
+}
+
 async function sendTelegramMessage(text) {
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    await fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -200,6 +261,29 @@ async function sendTelegramMessage(text) {
             parse_mode: 'Markdown',
         }),
     });
+
+    if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Telegram API ${res.status}: ${body.slice(0, 200)}`);
+    }
+}
+
+async function sendSlackMessage(payload) {
+    const webhookUrl = process.env.SLACK_WEBHOOK_URL?.trim();
+    if (!webhookUrl) {
+        return 'skipped';
+    }
+
+    const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Slack webhook ${res.status}: ${body.slice(0, 200)}`);
+    }
 }
 
 trackSales();

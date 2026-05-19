@@ -18,6 +18,7 @@ jobs:
       ENVATO_API_TOKEN: ${{ secrets.ENVATO_API_TOKEN || vars.ENVATO_API_TOKEN }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || vars.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || vars.TELEGRAM_CHAT_ID }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +40,12 @@ jobs:
             echo "If stored under an Environment, add 'environment: your-env-name' to this job."
             exit 1
           fi
-          echo "All credentials present."
+          echo "All required credentials present."
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "Slack: configured"
+          else
+            echo "Slack: skipped (SLACK_WEBHOOK_URL not set)"
+          fi
 
       - name: Track sales
         run: npm start
