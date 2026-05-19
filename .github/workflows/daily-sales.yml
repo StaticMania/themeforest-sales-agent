@@ -2,8 +2,9 @@ name: Daily ThemeForest Sales
 
 on:
   schedule:
-    # 8:00 PM GMT+6 (UTC+6) = 14:00 UTC — GitHub Actions cron uses UTC
-    - cron: '0 14 * * *'
+    # 8:17 PM in GMT+6 — minute offset avoids GitHub dropping jobs at :00
+    - cron: '17 20 * * *'
+      timezone: Asia/Dhaka
   workflow_dispatch:
 
 permissions:
