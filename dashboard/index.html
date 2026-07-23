@@ -524,6 +524,13 @@
         // Render mini chart
         const canvas = card.querySelector('canvas');
         const ctx = canvas.getContext('2d');
+        // Set explicit canvas size for proper rendering
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = 60 * window.devicePixelRatio;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = '60px';
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         new Chart(ctx, {
           type: 'line',
           data: {
