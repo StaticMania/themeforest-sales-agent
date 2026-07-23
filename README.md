@@ -25,9 +25,12 @@ themeforest-sales-agent/
 ├── .github/
 │   └── workflows/
 │       └── daily-sales.yml      # GitHub Actions workflow (daily at 20:17 Asia/Dhaka)
+├── dashboard/
+│   ├── index.html               # GitHub Pages dashboard (Chart.js)
+│   └── sales-history.json       # Auto-generated sales history for charts
 ├── index.js                     # Main application logic
 ├── products.json                # Products to track (id + name)
-├── data.json                    # Historical sales data (productId → totalSales)
+├── data.json                    # Historical sales data (productId → [{date, sales}, ...])
 ├── package.json                 # Dependencies (node-fetch, node ≥18)
 └── .gitignore
 ```
@@ -90,7 +93,12 @@ Add the following **Repository Secrets** (Settings → Secrets and variables →
 
 > **Tip**: Use **Secrets** (not Variables) for sensitive tokens. The workflow also supports Variables as fallback.
 
-The workflow runs automatically **daily at 20:17 Asia/Dhaka** (GMT+6) and commits updated `data.json` back to the repo.
+### Enable GitHub Pages (for Dashboard)
+
+1. Go to **Settings → Pages**
+2. Under **Source**, select **GitHub Actions**
+3. The workflow will automatically deploy the dashboard to `gh-pages` branch on each run
+4. Access at: `https://<your-username>.github.io/<repo-name>/`
 
 ### 4. Manual Trigger
 
@@ -121,6 +129,35 @@ No new sales · 63 total
 **Sasico WP**
 No new sales · 675 total
 ```
+
+---
+
+## 📈 Sales Dashboard (GitHub Pages)
+
+The project includes a **visual dashboard** deployed to GitHub Pages showing sales trends over time.
+
+### Features
+- **Total Sales Trend** — Line chart of cumulative sales across all products
+- **Daily New Sales** — Bar chart showing new sales per day
+- **Product Cards** — Individual product stats with mini sparkline charts
+- **Time Range Selector** — 7 days, 30 days, 90 days, 1 year, or all time
+- **Auto-refresh** — Updates automatically after each daily run
+
+### Accessing the Dashboard
+
+After enabling GitHub Pages (Settings → Pages → Source: **GitHub Actions**), the dashboard will be available at:
+
+```
+https://<your-username>.github.io/<repo-name>/
+```
+
+> **Note**: The workflow deploys to `gh-pages` branch automatically on each run (when on `main`/`master` branch).
+
+### Dashboard Preview
+
+![Dashboard Preview](dashboard/dashboard-preview.png)
+
+*(Add a screenshot after first deployment)*
 
 ---
 

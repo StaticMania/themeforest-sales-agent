@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  pages: write      # for GitHub Pages deployment
+  id-token: write   # for GitHub Pages deployment
 
 jobs:
   track-sales:
@@ -62,3 +64,21 @@ jobs:
             git commit -m "chore: update sales data"
             git push
           fi
+
+      # --- Dashboard Deployment ---
+      - name: Prepare dashboard data
+        run: |
+          # The index.js now writes dashboard/sales-history.json automatically
+          # Verify it exists
+          ls -la dashboard/
+
+      - name: Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dashboard
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'chore: update sales dashboard'
