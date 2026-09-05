@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThemeForest Sales Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --success: #3fb950;
+      --danger: #f85149;
+      --card-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+    .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    #lastUpdated { color: var(--text-muted); font-size: 13px; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    select:hover, button:hover { border-color: var(--accent); }
+    select:focus, button:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.2); }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 500;
+    }
+    button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .stat-value { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; }
+    .stat-value.positive { color: var(--success); }
+
+    /* Charts Section */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 1000px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .chart-title { font-size: 16px; font-weight: 600; }
+    .chart-period { font-size: 12px; color: var(--text-muted); }
+
+    .chart-wrapper { position: relative; height: 300px; }
+
+    /* Products Grid */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .section-title { font-size: 18px; font-weight: 600; }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .product-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    .product-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .product-id { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+
+    .product-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .product-stat { text-align: center; }
+    .product-stat-value { font-size: 20px; font-weight: 600; line-height: 1.2; }
+    .product-stat-value.positive { color: var(--success); }
+    .product-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    .mini-chart { width: 100%; height: 60px; }
+
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state p { max-width: 400px; margin: 0 auto; font-size: 14px; }
+    .empty-state code { background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+    /* Loading */
+    .loading { display: flex; justify-content: center; align-items: center; min-height: 200px; color: var(--text-muted); }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📈 ThemeForest Sales Dashboard</h1>
+      <div class="header-right">
+        <div class="controls">
+          <select id="timeRange" aria-label="Time range">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="180">Last 180 days</option>
+            <option value="365">Last 365 days</option>
+            <option value="">All time</option>
+          </select>
+          <button id="refreshBtn" class="primary">↻ Refresh</button>
+        </div>
+        <span id="lastUpdated"></span>
+      </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Loading...</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Loading...</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Loading...</div><div class="stat-value">—</div></div>
+      <div class="stat-card"><div class="stat-label">Loading...</div><div class="stat-value">—</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Total Sales Trend</span>
+          <span class="chart-period" id="chartPeriod">—</span>
+        </div>
+        <div class="chart-wrapper"><canvas id="totalSalesChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Daily New Sales</span>
+          <span class="chart-period" id="dailyChartPeriod">—</span>
+        </div>
+        <div class="chart-wrapper"><canvas id="dailySalesChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="section-header">
+      <h2 class="section-title">Products</h2>
+    </div>
+    <div class="products-grid" id="productsGrid">
+      <div class="loading"><div class="spinner"></div>Loading products...</div>
+    </div>
+  </div>
+
+  <script>
+    // Product metadata from products.json
+    const PRODUCTS = {
+      "59358848": "NextSaaS Tailwind",
+      "61429174": "NextSaaS WordPress",
+      "59610421": "NextSaaS NextJS",
+      "63201128": "Nexi Wordpress",
+      "59043079": "BrightHub WP",
+      "59880841": "Sasico WP"
+    };
+
+    let salesHistory = {};
+    let totalSalesChart = null;
+    let dailySalesChart = null;
+
+    async function loadData() {
+      try {
+        const response = await fetch('sales-history.json');
+        if (!response.ok) throw new Error('Failed to load');
+        salesHistory = await response.json();
+        renderAll();
+      } catch (e) {
+        console.error(e);
+        document.getElementById('productsGrid').innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p>Could not load sales data. Make sure <code>sales-history.json</code> exists in the dashboard folder.</p>
+          </div>
+        `;
+      }
+    }
+
+    function getFilteredHistory(days) {
+      const cutoff = days ? new Date(Date.now() - days * 86400000) : null;
+      const filtered = {};
+      let earliestDate = null;
+      let latestDate = null;
+
+      for (const [id, entries] of Object.entries(salesHistory)) {
+        const filteredEntries = entries.filter(e => !cutoff || new Date(e.date) >= cutoff);
+        if (filteredEntries.length) {
+          filteredEntries.sort((a, b) => new Date(a.date) - new Date(b.date));
+          filtered[id] = filteredEntries;
+          const first = new Date(filteredEntries[0].date);
+          const last = new Date(filteredEntries[filteredEntries.length - 1].date);
+          if (!earliestDate || first < earliestDate) earliestDate = first;
+          if (!latestDate || last > latestDate) latestDate = last;
+        }
+      }
+      return { data: filtered, earliestDate, latestDate };
+    }
+
+    function calculateStats(history, days) {
+      const { data, earliestDate, latestDate } = getFilteredHistory(days);
+      let totalSales = 0;
+      let totalNewSales = 0;
+      let productsWithSales = 0;
+
+      for (const [id, entries] of Object.entries(data)) {
+        if (entries.length === 0) continue;
+        const latest = entries[entries.length - 1];
+        const earliest = entries[0];
+        totalSales += latest.sales;
+        const newSales = latest.sales - earliest.sales;
+        if (newSales > 0) {
+          totalNewSales += newSales;
+          productsWithSales++;
+        }
+      }
+
+      return { totalSales, totalNewSales, productsWithSales, productCount: Object.keys(data).length, earliestDate, latestDate };
+    }
+
+    function renderStats() {
+      const range = parseInt(document.getElementById('timeRange').value) || null;
+      const stats = calculateStats(salesHistory, range);
+      const grid = document.getElementById('statsGrid');
+
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Total Sales</div>
+          <div class="stat-value">${stats.totalSales.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">New Sales (Period)</div>
+          <div class="stat-value ${stats.totalNewSales > 0 ? 'positive' : ''}">${stats.totalNewSales > 0 ? '+' : ''}${stats.totalNewSales.toLocaleString()}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Products</div>
+          <div class="stat-value">${stats.productsWithSales} / ${stats.productCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Sales/Product</div>
+          <div class="stat-value">${stats.productCount ? Math.round(stats.totalSales / stats.productCount) : 0}</div>
+        </div>
+      `;
+    }
+
+    function prepareChartData(days) {
+      const { data, earliestDate, latestDate } = getFilteredHistory(days);
+      if (!earliestDate || !latestDate) return { labels: [], datasets: [] };
+
+      // Generate all dates in range
+      const dates = [];
+      const current = new Date(earliestDate);
+      while (current <= latestDate) {
+        dates.push(new Date(current).toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 1);
+      }
+
+      // Total sales per day
+      const dailyTotals = {};
+      for (const [id, entries] of Object.entries(data)) {
+        for (const e of entries) {
+          dailyTotals[e.date] = (dailyTotals[e.date] || 0) + e.sales;
+        }
+      }
+
+      // New sales per day (difference from previous day)
+      let prevTotal = 0;
+      const dailyNew = {};
+      for (const date of dates) {
+        const total = dailyTotals[date] || prevTotal;
+        dailyNew[date] = total - prevTotal;
+        prevTotal = total;
+      }
+
+      const labels = dates.map(d => {
+        const dt = new Date(d);
+        return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+
+      const totalData = dates.map(d => dailyTotals[d] || null);
+      const newData = dates.map(d => dailyNew[d] || 0);
+
+      return { labels, totalData, newData, earliestDate, latestDate };
+    }
+
+    function renderCharts() {
+      const range = parseInt(document.getElementById('timeRange').value) || null;
+      const chartData = prepareChartData(range);
+
+      // Update period labels
+      if (chartData.earliestDate && chartData.latestDate) {
+        const fmt = d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('chartPeriod').textContent = `${fmt(chartData.earliestDate)} – ${fmt(chartData.latestDate)}`;
+        document.getElementById('dailyChartPeriod').textContent = `${fmt(chartData.earliestDate)} – ${fmt(chartData.latestDate)}`;
+      }
+
+      // Total Sales Chart
+      if (totalSalesChart) totalSalesChart.destroy();
+      const ctx1 = document.getElementById('totalSalesChart').getContext('2d');
+      totalSalesChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Total Sales',
+            data: chartData.totalData,
+            borderColor: 'rgba(88, 166, 255, 0.9)',
+            backgroundColor: 'rgba(88, 166, 255, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            borderWidth: 2
+          }]
+        },
+        options: getChartOptions()
+      });
+
+      // Daily New Sales Chart
+      if (dailySalesChart) dailySalesChart.destroy();
+      const ctx2 = document.getElementById('dailySalesChart').getContext('2d');
+      dailySalesChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'New Sales',
+            data: chartData.newData,
+            backgroundColor: chartData.newData.map(v => v > 0 ? 'rgba(63, 185, 80, 0.7)' : 'rgba(139, 148, 158, 0.4)'),
+            borderColor: chartData.newData.map(v => v > 0 ? 'rgba(63, 185, 80, 1)' : 'rgba(139, 148, 158, 0.8)'),
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: getChartOptions(true)
+      });
+    }
+
+    function getChartOptions(isBar = false) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#161b22',
+            titleColor: '#e6edf3',
+            bodyColor: '#e6edf3',
+            borderColor: '#30363d',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(48, 54, 61, 0.5)' }, ticks: { color: '#8b949e', maxTicksLimit: 10 } },
+          y: { grid: { color: 'rgba(48, 54, 61, 0.3)' }, ticks: { color: '#8b949e', precision: 0 }, beginAtZero: isBar }
+        },
+        interaction: { intersect: false, mode: 'index' }
+      };
+    }
+
+    function renderProducts() {
+      const range = parseInt(document.getElementById('timeRange').value) || null;
+      const { data } = getFilteredHistory(range);
+      const grid = document.getElementById('productsGrid');
+
+      grid.innerHTML = '';
+
+      for (const [id, name] of Object.entries(PRODUCTS)) {
+        const entries = data[id] || [];
+        if (entries.length === 0) continue;
+
+        const latest = entries[entries.length - 1];
+        const earliest = entries[0];
+        const newSales = latest.sales - earliest.sales;
+        const totalSales = latest.sales;
+
+        // Mini chart data
+        const miniLabels = entries.map(e => e.date);
+        const miniData = entries.map(e => e.sales);
+
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <div class="product-header">
+            <div>
+              <div class="product-name">${name}</div>
+              <div class="product-id">ID: ${id}</div>
+            </div>
+            <span style="font-size:12px;color:var(--text-muted)">${newSales > 0 ? '+' + newSales : newSales} new</span>
+          </div>
+          <div class="product-stats">
+            <div class="product-stat">
+              <div class="product-stat-value">${totalSales.toLocaleString()}</div>
+              <div class="product-stat-label">Total Sales</div>
+            </div>
+            <div class="product-stat">
+              <div class="product-stat-value ${newSales > 0 ? 'positive' : ''}">${newSales > 0 ? '+' : ''}${newSales.toLocaleString()}</div>
+              <div class="product-stat-label">This Period</div>
+            </div>
+            <div class="product-stat">
+              <div class="product-stat-value">${entries.length}</div>
+              <div class="product-stat-label">Days Tracked</div>
+            </div>
+          </div>
+          <canvas class="mini-chart" data-id="${id}"></canvas>
+        `;
+        grid.appendChild(card);
+
+        // Render mini chart
+        const canvas = card.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+        // Set explicit canvas size for proper rendering
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = 60 * window.devicePixelRatio;
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = '60px';
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: miniLabels.map(d => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            datasets: [{
+              data: miniData,
+              borderColor: newSales > 0 ? 'rgba(63, 185, 80, 0.9)' : 'rgba(88, 166, 255, 0.9)',
+              backgroundColor: newSales > 0 ? 'rgba(63, 185, 80, 0.1)' : 'rgba(88, 166, 255, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false } },
+            elements: { point: { radius: 0 } }
+          }
+        });
+      }
+    }
+
+    function renderAll() {
+      renderStats();
+      renderCharts();
+      renderProducts();
+      document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleString()}`;
+    }
+
+    // Event listeners
+    document.getElementById('timeRange').addEventListener('change', renderAll);
+    document.getElementById('refreshBtn').addEventListener('click', loadData);
+
+    // Initial load
+    loadData();
+  </script>
+</body>
+</html>
